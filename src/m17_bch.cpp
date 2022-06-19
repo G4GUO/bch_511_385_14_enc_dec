@@ -592,20 +592,20 @@ int m17_bch_decode( uint8_t *inout ){
    		// Calculate the syndromes
    		s[0]  = 1;
    		for(int i = 0; i < BCH_N; i++){
-   		    s[1]  = s[1]  ? cgmpwr(s[1],1)   ^ inout[i] : inout[i];
-   		    s[3]  = s[3]  ? cgmpwr(s[3],3)   ^ inout[i] : inout[i];
-   		    s[5]  = s[5]  ? cgmpwr(s[5],5)   ^ inout[i] : inout[i];
-   		    s[7]  = s[7]  ? cgmpwr(s[7],7)   ^ inout[i] : inout[i];
-   		    s[9]  = s[9]  ? cgmpwr(s[9],9)   ^ inout[i] : inout[i];
-   		    s[11] = s[11] ? cgmpwr(s[11],11) ^ inout[i] : inout[i];
-   		    s[13] = s[13] ? cgmpwr(s[13],13) ^ inout[i] : inout[i];
-   		    s[15] = s[15] ? cgmpwr(s[15],15) ^ inout[i] : inout[i];
-   		    s[17] = s[17] ? cgmpwr(s[17],17) ^ inout[i] : inout[i];
-   		    s[19] = s[19] ? cgmpwr(s[19],19) ^ inout[i] : inout[i];
-   		    s[21] = s[21] ? cgmpwr(s[21],21) ^ inout[i] : inout[i];
-   		    s[23] = s[23] ? cgmpwr(s[23],23) ^ inout[i] : inout[i];
-   		    s[25] = s[25] ? cgmpwr(s[25],25) ^ inout[i] : inout[i];
-   		    s[27] = s[27] ? cgmpwr(s[27],27) ^ inout[i] : inout[i];
+   		    s[1]  = s[1]  ? gpwrn(s[1],1)   ^ inout[i] : inout[i];
+   		    s[3]  = s[3]  ? gpwrn(s[3],3)   ^ inout[i] : inout[i];
+   		    s[5]  = s[5]  ? gpwrn(s[5],5)   ^ inout[i] : inout[i];
+   		    s[7]  = s[7]  ? gpwrn(s[7],7)   ^ inout[i] : inout[i];
+   		    s[9]  = s[9]  ? gpwrn(s[9],9)   ^ inout[i] : inout[i];
+   		    s[11] = s[11] ? gpwrn(s[11],11) ^ inout[i] : inout[i];
+   		    s[13] = s[13] ? gpwrn(s[13],13) ^ inout[i] : inout[i];
+   		    s[15] = s[15] ? gpwrn(s[15],15) ^ inout[i] : inout[i];
+   		    s[17] = s[17] ? gpwrn(s[17],17) ^ inout[i] : inout[i];
+   		    s[19] = s[19] ? gpwrn(s[19],19) ^ inout[i] : inout[i];
+   		    s[21] = s[21] ? gpwrn(s[21],21) ^ inout[i] : inout[i];
+   		    s[23] = s[23] ? gpwrn(s[23],23) ^ inout[i] : inout[i];
+   		    s[25] = s[25] ? gpwrn(s[25],25) ^ inout[i] : inout[i];
+   		    s[27] = s[27] ? gpwrn(s[27],27) ^ inout[i] : inout[i];
   		}
    		s[2]  = gmult(s[1],  s[1]);
    		s[4]  = gmult(s[2],  s[2]);
