@@ -37,6 +37,8 @@ static uint64_t m_64_poly[2];
 static uint16_t m_pinv[GP_SIZE];
 static uint16_t m_gmod;
 
+static uint16_t cmult(uint16_t a, uint16_t b);
+
 // Test code included
 #define __TEST__
 
@@ -143,6 +145,17 @@ static void bch_alog_log_build_table(void){
 
 #ifdef __LUT__
 
+// High speed multiply using a large lookup table
+
+static uint16_t m_mult[0x40000];
+
+void build_mult_table(void){
+	for( int i = 0; i < 0x40000; i++){
+		m_mult[i] = cmult((i>>9),i&0x1FF);
+	}
+}
+#define gmult(a,b) (m_mult[(a<<9)|(b)])
+
 typedef struct{
 	uint64_t tab[2];
 }BchLut;
@@ -231,6 +244,9 @@ void m17_bch_encode_fast( uint8_t *inout ){
 #endif
 
 #ifndef __LUT__
+
+#define gmult(a,b) (cmult(a,b))
+
 //
 // value 0x21 comes generator polynomial 1 reversed
 //
@@ -246,12 +262,12 @@ static uint16_t cgmpwr(uint16_t a, uint16_t pwr)
 }
 #endif
 
-static uint16_t gmult(uint16_t a, uint16_t b){
+static uint16_t cmult(uint16_t a, uint16_t b){
 
 	uint16_t sr = 0;
 	for (int i = 0; i < BCH_M; i++){
 		sr <<= 1;
-		if (a  & 0x100)  sr ^= b;
+		if (a  & 0x100)    sr ^= b;
 		if (sr & GP_SIZE)  sr ^= m_gmod;//a^10 = (a + 1)
 		a <<= 1;
 	}
@@ -363,7 +379,7 @@ static void bch_berk(uint16_t *s, uint16_t *aa )
 		}
 		if((k+1) < BCH_2T){
 			if((k&1)==0){
-				d[k+1] = 0;// with GF(2) only need to calculate odd values as d[even] = 0
+				d[k+1] = 0;// GF(2) so only need to calculate odd values as d[even] = 0
 			}else{
 		        int an = 1;
 		        d[k + 1] = s[k + 2];
@@ -622,7 +638,7 @@ int m17_bch_decode( uint8_t *inout ){
 		s[26] = gmult(s[13], s[13]);
 		s[28] = gmult(s[14], s[14]);
 
-        bch_berk( s, a );
+		bch_berk( s, a );
 		r = bch_chien_search( a, z );
 		if( r > 0 ) fix_errors(inout, BCH_N, z, r);
     }
@@ -671,6 +687,9 @@ void m17_bch_init(void){
 
     len = BCH_NK;
     m_gmod = poly_16_pack( poly01, BCH_M );
+#ifdef __LUT__
+    build_mult_table();
+#endif
 
     poly_reverse( polyout[0], polyout[1], len );
     poly_64_pack( polyout[1], m_64_poly,  len );
@@ -783,7 +802,7 @@ int main(int argc, char **argv ){
 	m17_bch_init();
 
 #ifdef __TEST__
-	int m = 1;
+	int m = 14;
     if(argc == 2) m = atoi(argv[1]);
     if( m < 0 ) m = 0;
     if(m > 14)  m = 14;
