@@ -363,7 +363,7 @@ static void bch_berk(uint16_t *s, uint16_t *aa )
 		}
 		if((k+1) < BCH_2T){
 			if((k&1)==0){
-				d[k+1] = 0;// GF(2) so no need to calculate odd values as d[] = 0
+				d[k+1] = 0;// with GF(2) only need to calculate odd values as d[even] = 0
 			}else{
 		        int an = 1;
 		        d[k + 1] = s[k + 2];
