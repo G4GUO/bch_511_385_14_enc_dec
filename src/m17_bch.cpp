@@ -1,32 +1,21 @@
 /*
- * This is a simple BCH encoder and decoder for the BCH primitive (511,385,14) code
+ * BCH (511, 385, 14) encoder and decoder - implementation.
  *
- * written by C.H Brain G4GUO 12th June 2022
+ * Written by C.H. Brain G4GUO, 12 June 2022.
+ * Public domain: no copyright, no restriction on application.
+ * The author accepts no responsibility for correctness or fitness for purpose.
  *
- * You may use this program or it's derivatives without credit.
- * There is no restriction on what applications this code can be used for.
- *
- * The program bears no copyright
- *
- * The author bears no responsibility for its correctness or it's functioning
- *
+ * This file deliberately contains no main() and no stdio, so it can be linked
+ * into another program. The command line demo is demo.cpp; the tests are in
+ * ../tests/test_bch.cpp. See m17_bch.h for the API contract.
  */
-#include <memory.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <sys/time.h>
+#include "m17_bch.h"
 
-#define BCH_N  511
-#define BCH_K  385
-#define BCH_NK 126
-#define BCH_M  9
-#define BCH_T  14
-#define BCH_2T (2*BCH_T)
-#define SM     (BCH_2T+1)
-#define GP_SIZE 0x200
-#define GT_SIZE 0x220
+#include <string.h>
+
+#define BCH_2T  (2 * BCH_T)
+#define GP_SIZE 0x200 /* the x^9 term in this field representation */
+#define GT_SIZE 0x220 /* log table: 544 entries, enough for 510 + 27 */
 #define GP_MASK 0x1FF
 
 #define ginv(a)    m_pinv[a]
@@ -38,9 +27,6 @@ static uint16_t m_pinv[GP_SIZE];
 static uint16_t m_gmod;
 
 static uint16_t cmult(uint16_t a, uint16_t b);
-
-// Test code included
-#define __TEST__
 
 // Enable Look Up Table calculation
 #define __LUT__
@@ -58,7 +44,7 @@ static void  inline reg_64_2_shift( uint64_t *sr )
 // len in is always in bits
 // len returned is in bytes
 //
-static int pack_1_to_8(uint8_t *in, uint8_t *out, int len){
+static int pack_1_to_8(const uint8_t *in, uint8_t *out, int len){
 	int d = len/8;
 	int r = len%8;
 	int idx = 0;
@@ -87,33 +73,6 @@ static int pack_1_to_8(uint8_t *in, uint8_t *out, int len){
     	cnt--;
     }
 	return (d + 1);
-}
-//
-// Pack 8 to 1
-// length in and out is in bits
-//
-static int pack_8_to_1(uint8_t *in, uint8_t *out, int len){
-	int d = len/8;
-	int r = len%8;
-	int odx = 0;
-	for( int i = 0; i < d; i++){
-		out[odx++]= in[i] & 0x80 ? 1 : 0;
-		out[odx++]= in[i] & 0x40 ? 1 : 0;
-		out[odx++]= in[i] & 0x20 ? 1 : 0;
-		out[odx++]= in[i] & 0x10 ? 1 : 0;
-		out[odx++]= in[i] & 0x08 ? 1 : 0;
-		out[odx++]= in[i] & 0x04 ? 1 : 0;
-		out[odx++]= in[i] & 0x02 ? 1 : 0;
-		out[odx++]= in[i] & 0x01 ? 1 : 0;
-	}
-	if( r == 0 ) return odx;
-    return odx;
-	uint8_t cnt = 7;
-    for( int i = 0; i < r; i++){
-    	out[odx++] = in[d] & (1<<cnt) ? 1 : 0;
-    	cnt--;
-    }
-    return odx;
 }
 //
 // Galois calculations
@@ -199,7 +158,7 @@ static void bch_build_parity_check_lut( void )
 //
 // Encode 8 bits at a time
 //
-static void bch_encode_by_8( uint8_t *in, uint64_t *out, int len ){
+static void bch_encode_by_8( const uint8_t *in, uint64_t *out, int len ){
     uint8_t b;
 
     for( int i = 0; i < len; i++){
@@ -209,7 +168,7 @@ static void bch_encode_by_8( uint8_t *in, uint64_t *out, int len ){
         out[1] ^= m_bch_lut[b].tab[1];
     }
 }
-static void bch_encode_fast( uint8_t *inout, uint64_t *sr, int len ){
+static void bch_encode_fast( const uint8_t *inout, uint64_t *sr, int len ){
     uint8_t b[(BCH_N/8)+1];
     int n = (len/8);
     // Pack the binary bitstream into bytes
@@ -397,8 +356,8 @@ static int bch_chien_search(uint16_t *a, uint16_t *z )
 {
 	// Calculate the reciprocal of the coefficients
 	int order, nr_coffs, flag;
-	static uint16_t  ord[BCH_T+1];
-	static uint16_t  t[BCH_T+1];
+	uint16_t  ord[BCH_T+1];
+	uint16_t  t[BCH_T+1];
 	order    = 0;
 	nr_coffs = 0;
     flag     = 0;
@@ -564,7 +523,7 @@ static void bch_encode(uint8_t *in, uint64_t *sr, int len ){
 // Externally visible
 //
 /////////////////////////////////////////////////////////////////////////////
-static bool m17_bch_check( uint8_t *in ){
+bool m17_bch_check( const uint8_t *in ){
     uint64_t sr[2];
     //Zero the shift register
     sr[0] = 0;
@@ -594,9 +553,9 @@ void m17_bch_encode( uint8_t *inout ){
 }
 
 int m17_bch_decode( uint8_t *inout ){
-	static uint16_t s[BCH_2T+1];
-	static uint16_t z[BCH_2T+2];
-	static uint16_t a[BCH_T+1];
+	uint16_t s[BCH_2T+1];
+	uint16_t z[BCH_2T+2];
+	uint16_t a[BCH_T+1];
 	int r = 0;
 
 	memset(s,0,sizeof(uint16_t)*(BCH_2T+1));
@@ -646,7 +605,22 @@ int m17_bch_decode( uint8_t *inout ){
 }
 void m17_bch_init(void){
 
-	// Base Polynomials
+	// Base polynomials.
+	//
+	// These are the 14 minimal polynomials over GF(2^9) of alpha^1, alpha^3,
+	// ... alpha^27, where alpha is a root of
+	//
+	//     p(x) = x^9 + x^5 + 1
+	//
+	// Coefficients are listed lowest power first, so poly01 is p(x) itself and
+	// its trailing 1 is the x^9 term (implicit in the field representation;
+	// m_gmod below packs the low 9 coefficients as 0x21).
+	//
+	// Multiplying all fourteen together gives the degree 126 generator
+	// polynomial g(x) of the (511, 385, 14) code, which is built further down.
+	// A different primitive polynomial yields an equally valid (511, 385, 14)
+	// code with different codewords that will not interoperate with this one,
+	// so p(x) and these arrays must be changed together or not at all.
 
     int poly01[10]={1,0,0,0,0,1,0,0,0,1};
     int poly02[10]={1,0,0,1,0,1,1,0,0,1};
@@ -700,114 +674,3 @@ void m17_bch_init(void){
 #endif
 
 }
-//
-// Test harness
-//
-
-#ifdef __TEST__
-
-bool decode_test(uint8_t *bits){
-    m17_bch_decode( bits );
-    return m17_bch_check( bits );
-}
-
-bool bch_test(int n){
-
-    // Now do a test
-    static uint8_t bits[BCH_N];
-
-    for(int i = 0; i < BCH_K; i++){
-    	bits[i] = rand()&1;
-    }
-
-    m17_bch_encode( bits );
-
-    // Add some errors
-    for( int i = 0; i < n; i++){
-    	bits[rand()%511] ^= 1;
-    }
-
-   	if(decode_test(bits) == false){
-        printf("BCH Correction FAIL\n");
-        return false;
-   	}
-   	return true;
-}
-
-uint64_t GetTimeStamp(void) {
-    struct timeval tv;
-    gettimeofday(&tv,NULL);
-    return tv.tv_sec*(uint64_t)1000000+tv.tv_usec;
-}
-
-void test(int m){
-    //
-	// Test example code below here
-	//
-	int   fails = 0;
-    int   n     = 100000;
-    float d     = 100.0/n;
-
-
-    uint64_t s,e;
-
-    s = GetTimeStamp();
-
-    printf("Start of BCH test %d errors per frame\n",m);
-	for( int i = 0; i < n; i++ ){
-		if(bch_test(m)== false) fails++;;
-	}
-	printf("Number Failed codewords %d, percentage failure %.2f\n",fails,fails*d);
-    e = GetTimeStamp();
-
-    float du = (e - s)/1000000.0;
-
-    printf("Duration of test %.2f secs\n",du);
-    printf("Number of 511 bit codewords received %d\n",n);
-    printf("Equivalent bitrate %.2f Mbs\n", (n*BCH_K)/(du*1000000.0));
-
-}
-#endif
-/*
- *
- * To use this program you will need to call m17_bch_init() first
- * Then multiple calls of m17_bch_encode() and m17_bch_decode()
- *
- * The array passed to these functions is a read / write uint8_t array with the data
- * encoded as 1 bit per byte. The arrays are BCH_N bits long.
- *
- * To encode a word you pass an array with BCH_K bits of the data to encode
- * it returns the array with the parity bits written in the BCH_K to BCH_N entries.
- *
- * To decode you pass the BCN_N bits of the received word into the bch_decode function
- * it returns the corrected bits in the first BCH_K entries of the array
- *
- * There is also a final function called bch_check() you pass the BCH_N bits
- * of the codeword to it and it returns a true / false value depending on
- * whether is considers the codeword to be valid.
- *
- * The program only runs error correction if the codeword you pass to it is in error.
- * So the decode speed is not constant and depends on number of errors
- * It is capable of recovering up to 14 bit errors.
- *
- * the __TEST__ define includes the test harness code
- * the __LUT__  define uses large lookup tables and is about 40% faster
- *
- * When running the program from the command line you can pass a number
- * between 0 and 14 telling the program how many error bits you want in each codeword
- *
- *
- */
-int main(int argc, char **argv ){
-	m17_bch_init();
-
-#ifdef __TEST__
-	int m = 14;
-    if(argc == 2) m = atoi(argv[1]);
-    if( m < 0 ) m = 0;
-    if(m > 14)  m = 14;
-    test(m);
-#endif
-
-}
-

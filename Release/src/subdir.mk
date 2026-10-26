@@ -4,13 +4,16 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
-../src/m17_bch.cpp 
+../src/m17_bch.cpp \
+../src/demo.cpp 
 
 OBJS += \
-./src/m17_bch.o 
+./src/m17_bch.o \
+./src/demo.o 
 
 CPP_DEPS += \
-./src/m17_bch.d 
+./src/m17_bch.d \
+./src/demo.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
