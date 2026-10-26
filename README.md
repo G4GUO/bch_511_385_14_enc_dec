@@ -49,6 +49,10 @@ bch511385_encode(bits);            /* bitwise reference encoder               */
 bch511385_encode_fast(bits);       /* table driven, ~40% faster               */
 bch511385_check(bits);             /* true if the 511 bits are a valid word   */
 int r = bch511385_decode(bits);    /* correct in place                        */
+
+/* if your data is byte oriented */
+bch511385_bytes_to_bits(data, bits, 385);   /* 49 bytes  -> 385 samples       */
+bch511385_bits_to_bytes(bits, data, 511);   /* 511 samples -> 64 bytes        */
 ```
 
 `bch511385_decode()` returns:

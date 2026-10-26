@@ -41,41 +41,6 @@ static void  inline reg_64_2_shift( uint64_t *sr )
     sr[1] = (sr[1]<<1);
 }
 //
-// Packing routines
-// len in is always in bits
-// len returned is in bytes
-//
-static int pack_1_to_8(const uint8_t *in, uint8_t *out, int len){
-	int d = len/8;
-	int r = len%8;
-	int idx = 0;
-	for( int i = 0; i < d; i++){
-		out[i] = in[idx++];
-		out[i] <<=1;
-		out[i] |= in[idx++];
-		out[i] <<=1;
-		out[i] |= in[idx++];
-		out[i] <<=1;
-		out[i] |= in[idx++];
-		out[i] <<=1;
-		out[i] |= in[idx++];
-		out[i] <<=1;
-		out[i] |= in[idx++];
-		out[i] <<=1;
-		out[i] |= in[idx++];
-		out[i] <<=1;
-		out[i] |= in[idx++];
-	}
-	if( r == 0 ) return d;
-	out[d] = 0;
-	uint8_t cnt = 7;
-    for( int i = 0; i < r; i++){
-    	out[d] |= in[idx++] ? (1<<cnt) : 0;
-    	cnt--;
-    }
-	return (d + 1);
-}
-//
 // Galois calculations
 //
 uint16_t m_logtab[0x200];
@@ -173,7 +138,7 @@ static void bch_encode_fast( const uint8_t *inout, uint64_t *sr, int len ){
     uint8_t b[(BCH_N/8)+1];
     int n = (len/8);
     // Pack the binary bitstream into bytes
-    pack_1_to_8(inout, b, len);
+    bch511385_bits_to_bytes(inout, b, len);
 	bch_encode_by_8( b, sr, n);
     // final bits
 	for( int i = (n*8); i < len; i++){
@@ -524,6 +489,29 @@ static void bch_encode(uint8_t *in, uint64_t *sr, int len ){
 // Externally visible
 //
 /////////////////////////////////////////////////////////////////////////////
+//
+// Byte <-> bit packing, public. Same bit order as the rest of the API: MSB
+// first, so sample 0 is bit 7 of byte 0. Returns the number of bits or bytes
+// written.
+//
+int bch511385_bits_to_bytes(const uint8_t *bits, uint8_t *bytes, int nbits)
+{
+    int nbytes = (nbits + 7) / 8;
+    for (int i = 0; i < nbytes; i++) bytes[i] = 0;
+    for (int i = 0; i < nbits; i++) {
+        if (bits[i] & 1) bytes[i >> 3] |= (uint8_t)(0x80u >> (i & 7));
+    }
+    return nbytes;
+}
+
+int bch511385_bytes_to_bits(const uint8_t *bytes, uint8_t *bits, int nbits)
+{
+    for (int i = 0; i < nbits; i++) {
+        bits[i] = (uint8_t)((bytes[i >> 3] >> (7 - (i & 7))) & 1);
+    }
+    return nbits;
+}
+
 bool bch511385_check( const uint8_t *in ){
     uint64_t sr[2];
     //Zero the shift register

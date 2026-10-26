@@ -201,6 +201,50 @@ static bool case_beyond_t_is_flagged(int n_errors, int trials) {
     return true;
 }
 
+static bool case_packing(void) {
+    // Round trip over a spread of lengths: not a multiple of 8, exactly 8, and
+    // the two lengths this codec actually uses.
+    const int lengths[] = {1, 7, 8, 9, 15, 16, 17, 385, 511};
+    for (unsigned k = 0; k < sizeof(lengths) / sizeof(lengths[0]); k++) {
+        int n = lengths[k];
+        uint8_t bits[BCH_N], back[BCH_N], packed[(BCH_N + 7) / 8];
+        for (int i = 0; i < n; i++) bits[i] = (uint8_t)(xs32() & 1);
+
+        int nbytes = bch511385_bits_to_bytes(bits, packed, n);
+        if (nbytes != (n + 7) / 8) {
+            printf("FAIL: packing %d bits produced %d bytes, expected %d\n", n, nbytes, (n + 7) / 8);
+            return false;
+        }
+        int nbits = bch511385_bytes_to_bits(packed, back, n);
+        if (nbits != n) {
+            printf("FAIL: unpacking %d bits returned %d\n", n, nbits);
+            return false;
+        }
+        for (int i = 0; i < n; i++)
+            if (back[i] != bits[i]) {
+                printf("FAIL: packing round trip lost bit %d of %d\n", i, n);
+                return false;
+            }
+    }
+
+    // Bit order: sample 0 must be the MSB of byte 0.
+    uint8_t bits8[8] = {1, 0, 0, 0, 0, 0, 0, 0}, one[1] = {0};
+    bch511385_bits_to_bytes(bits8, one, 8);
+    if (one[0] != 0x80) {
+        printf("FAIL: packing is not MSB first (got 0x%02X)\n", one[0]);
+        return false;
+    }
+
+    // Unused trailing bits must be cleared, not left over from the buffer.
+    uint8_t three[3] = {1, 1, 1}, out[1] = {0xFF};
+    bch511385_bits_to_bytes(three, out, 3);
+    if (out[0] != 0xE0) {
+        printf("FAIL: padding bits not cleared (got 0x%02X)\n", out[0]);
+        return false;
+    }
+    return true;
+}
+
 int main(void) {
     bch511385_init();
 
@@ -209,6 +253,7 @@ int main(void) {
     bool clean_ok = case_clean_is_untouched();
     bool check_ok = case_check_rejects_errors();
     bool enc_ok = case_encoders_agree();
+    bool pack_ok = case_packing();
 
     bool round_ok = true;
     for (int n = 0; n <= BCH_T; n++) {
@@ -232,6 +277,7 @@ int main(void) {
         {"clean codeword untouched", clean_ok},
         {"check() rejects errors", check_ok},
         {"encode paths agree", enc_ok},
+        {"byte packing helpers", pack_ok},
         {"round trip 0..14 errors", round_ok},
         {"15..29 errors flagged", beyond_ok},
     };

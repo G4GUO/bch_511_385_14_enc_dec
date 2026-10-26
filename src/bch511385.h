@@ -63,6 +63,27 @@ bool bch511385_check(const uint8_t *in);
 /* Correct up to BCH_T bit errors in place. See return values above. */
 int bch511385_decode(uint8_t *inout);
 
+/* Packing helpers, for callers that hold data as bytes rather than one bit per
+ * byte. Both use the same bit order as everything else here: MSB first, so
+ * sample 0 is bit 7 of the first byte.
+ *
+ *   bch511385_bits_to_bytes  nbits samples (1 bit per byte) -> packed bytes
+ *   bch511385_bytes_to_bits  packed bytes -> nbits samples (1 bit per byte)
+ *
+ * The caller owns both buffers. The destination needs room for nbits samples or
+ * (nbits + 7) / 8 bytes respectively. Both return the number of bytes or bits
+ * written, so a 385-bit message occupies 49 bytes and a 511-bit codeword 64.
+ *
+ * Typical use when your data is byte oriented:
+ *
+ *   uint8_t msg[BCH_N], packed[64];
+ *   bch511385_bytes_to_bits(data, msg, BCH_K);   // 385 samples from 49 bytes
+ *   bch511385_encode(msg);                       // parity in msg[385..510]
+ *   bch511385_bits_to_bytes(msg, packed, BCH_N); // 64 bytes to transmit
+ */
+int bch511385_bits_to_bytes(const uint8_t *bits, uint8_t *bytes, int nbits);
+int bch511385_bytes_to_bits(const uint8_t *bytes, uint8_t *bits, int nbits);
+
 #ifdef __cplusplus
 }
 #endif
