@@ -7,9 +7,9 @@
  *
  * This file deliberately contains no main() and no stdio, so it can be linked
  * into another program. The command line demo is demo.cpp; the tests are in
- * ../tests/test_bch.cpp. See m17_bch.h for the API contract.
+ * ../tests/test_bch.cpp. See bch511385.h for the API contract.
  */
-#include "m17_bch.h"
+#include "bch511385.h"
 
 #include <string.h>
 
@@ -187,7 +187,7 @@ static void bch_encode_fast( const uint8_t *inout, uint64_t *sr, int len ){
 //
 // bitstream input
 //
-void m17_bch_encode_fast( uint8_t *inout ){
+void bch511385_encode_fast( uint8_t *inout ){
     uint64_t sr[2];
     //Zero the shift register
     sr[0] = 0;
@@ -523,7 +523,7 @@ static void bch_encode(uint8_t *in, uint64_t *sr, int len ){
 // Externally visible
 //
 /////////////////////////////////////////////////////////////////////////////
-bool m17_bch_check( const uint8_t *in ){
+bool bch511385_check( const uint8_t *in ){
     uint64_t sr[2];
     //Zero the shift register
     sr[0] = 0;
@@ -539,7 +539,7 @@ bool m17_bch_check( const uint8_t *in ){
     return true;
 }
 
-void m17_bch_encode( uint8_t *inout ){
+void bch511385_encode( uint8_t *inout ){
     uint64_t sr[2];
     //Zero the shift register
     sr[0] = 0;
@@ -552,7 +552,7 @@ void m17_bch_encode( uint8_t *inout ){
     }
 }
 
-int m17_bch_decode( uint8_t *inout ){
+int bch511385_decode( uint8_t *inout ){
 	uint16_t s[BCH_2T+1];
 	uint16_t z[BCH_2T+2];
 	uint16_t a[BCH_T+1];
@@ -562,7 +562,7 @@ int m17_bch_decode( uint8_t *inout ){
 	memset(z,0,sizeof(uint16_t)*(BCH_2T+2));
 
 
-    if(m17_bch_check( inout )==false){
+    if(bch511385_check( inout )==false){
     	// Block is in error
    		// Calculate the syndromes
    		s[0]  = 1;
@@ -603,7 +603,7 @@ int m17_bch_decode( uint8_t *inout ){
     }
     return r;
 }
-void m17_bch_init(void){
+void bch511385_init(void){
 
 	// Base polynomials.
 	//

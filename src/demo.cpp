@@ -1,15 +1,15 @@
 /*
  * Command line demo / benchmark for the BCH (511, 385, 14) code.
  *
- *   ./m17_bch        encode and decode 100000 codewords, 14 bit errors each
- *   ./m17_bch 5      same, but with 5 bit errors per codeword
+ *   ./bch511385        encode and decode 100000 codewords, 14 bit errors each
+ *   ./bch511385 5      same, but with 5 bit errors per codeword
  *
  * Prints the number of failed codewords, the duration and the equivalent
  * payload bit rate. Built as part of the CMake project, or by hand:
  *
- *   g++ -O2 -I src src/demo.cpp src/m17_bch.cpp -o m17_bch
+ *   g++ -O2 -I src src/demo.cpp src/bch511385.cpp -o bch511385
  */
-#include "m17_bch.h"
+#include "bch511385.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -50,10 +50,10 @@ static bool one_codeword(int n_errors) {
     uint8_t bits[BCH_N];
     for (int i = 0; i < BCH_K; i++) bits[i] = (uint8_t)(xs32() & 1);
 
-    m17_bch_encode(bits);
+    bch511385_encode(bits);
     add_errors(bits, n_errors);
-    m17_bch_decode(bits);
-    return m17_bch_check(bits);
+    bch511385_decode(bits);
+    return bch511385_check(bits);
 }
 
 static void test(int m) {
@@ -78,7 +78,7 @@ static void test(int m) {
 }
 
 int main(int argc, char **argv) {
-    m17_bch_init();
+    bch511385_init();
 
     int m = 14;
     if (argc == 2) m = atoi(argv[1]);

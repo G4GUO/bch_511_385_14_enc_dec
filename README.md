@@ -4,7 +4,7 @@ Encoder and decoder for the **BCH (511, 385, 14)** code, plus a small simulator/
 that encodes a codeword, injects a known number of bit errors and decodes it again.
 
 Portable C++ with no dependencies: one translation unit, one header, no allocations
-after `m17_bch_init()`.
+after `bch511385_init()`.
 
 ## Code parameters
 
@@ -29,19 +29,33 @@ A different primitive polynomial produces a code with the same parameters but
 different codewords, so it will **not** interoperate with this one. If you change
 `p(x)` you must change the 14 base polynomials with it.
 
+## Scope
+
+This is a standalone codec, not part of any particular protocol.
+
+* It is **not** used by M17. M17 protects the link setup frame with Golay(24,12)
+  and its LSF, stream and packet payloads with a rate-1/2, K=5 convolutional code,
+  plus CRC-16 and bit interleaving.
+* It is **not** the DVB-S2 outer BCH code either. DVB-S2 uses rate-dependent
+  shortened BCH codes correcting t = 8 to 12 errors with 128 to 192 parity bits on
+  16200- and 64800-bit frames (GF(2^16) for normal frames, GF(2^14) for short
+  ones), concatenated with LDPC.
+* In tables that quote the designed distance instead of the correction capability
+  this code appears as **BCH(511, 385, 29)** — same code, since δ = 2t + 1 = 29.
+
 ## API
 
 ```c
-#include "m17_bch.h"
+#include "bch511385.h"
 
-m17_bch_init();                  /* once, before anything else              */
-m17_bch_encode(bits);            /* bitwise reference encoder               */
-m17_bch_encode_fast(bits);       /* table driven, ~40% faster               */
-m17_bch_check(bits);             /* true if the 511 bits are a valid word   */
-int r = m17_bch_decode(bits);    /* correct in place                        */
+bch511385_init();                  /* once, before anything else              */
+bch511385_encode(bits);            /* bitwise reference encoder               */
+bch511385_encode_fast(bits);       /* table driven, ~40% faster               */
+bch511385_check(bits);             /* true if the 511 bits are a valid word   */
+int r = bch511385_decode(bits);    /* correct in place                        */
 ```
 
-`m17_bch_decode()` returns:
+`bch511385_decode()` returns:
 
 | value | meaning |
 |---|---|
@@ -60,26 +74,26 @@ CMake (recommended):
 cmake -S . -B build
 cmake --build build
 ctest --test-dir build --output-on-failure
-./build/m17_bch 14
+./build/bch511385 14
 ```
 
 Or by hand:
 
 ```sh
-g++ -O2 -Isrc src/demo.cpp src/m17_bch.cpp -o m17_bch
+g++ -O2 -Isrc src/demo.cpp src/bch511385.cpp -o bch511385
 ```
 
 The original Eclipse-generated makefile is still there and still works:
 
 ```sh
-cd Release && make && ./m17_bch
+cd Release && make && ./bch511385
 ```
 
 ## Running the demo
 
 ```sh
-./m17_bch        # 100000 codewords, 14 bit errors each
-./m17_bch 5      # same, with 5 bit errors per codeword
+./bch511385        # 100000 codewords, 14 bit errors each
+./bch511385 5      # same, with 5 bit errors per codeword
 ```
 
 Each iteration generates a random message, encodes it, flips exactly *n* distinct
@@ -116,7 +130,7 @@ constant — a clean channel is about 34x faster than a fully loaded one.
 * round trips at every error count 0 … 14, with *distinct* positions;
 * 15 … 29 errors are reported as uncorrectable and leave the buffer untouched;
 * the two encoders agree bit for bit;
-* `m17_bch_check()` rejects words with 1 … 5 errors.
+* `bch511385_check()` rejects words with 1 … 5 errors.
 
 The known-answer vectors were produced by an independent GF(2^9) reference
 implementation and agree with this code bit for bit, which is what pins the code
@@ -125,10 +139,10 @@ self-consistent.
 
 ## Memory
 
-`m17_bch_init()` builds a 512 kB multiply table (`m_mult`) plus a few small
+`bch511385_init()` builds a 512 kB multiply table (`m_mult`) plus a few small
 tables: about **520 kB of static RAM in total**. That is fine on a PC and too much
 for a small microcontroller. Commenting out the `#define __LUT__` in
-`m17_bch.cpp` drops the big table and multiplies in software instead: slower, and
+`bch511385.cpp` drops the big table and multiplies in software instead: slower, and
 far smaller. A log/antilog multiply would be a better middle ground if you need
 both.
 
@@ -140,7 +154,9 @@ Public domain, as stated in the original source header — see `LICENSE`
 ## Provenance
 
 The code, and the original single-file demo, were written by **C.H. Brain, G4GUO**
-in June 2022.
+in June 2022. The source file was originally published as `m17_bch.cpp` with
+`m17_bch_*` functions; M17 does not use this code, the prefix was a naming habit
+from concurrent work, and it has been dropped.
 
 This branch is a maintenance contribution by **Hermes Agent** (an AI agent built by
 Nous Research), prepared at G4GUO's request and reviewed by him before merge. It

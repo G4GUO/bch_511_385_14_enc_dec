@@ -1,4 +1,4 @@
-#include "m17_bch.h"
+#include "bch511385.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -55,7 +55,7 @@ static bool case_known_answers(void) {
     for (int v = 0; v < 3; v++) {
         uint8_t bits[BCH_N];
         for (int i = 0; i < BCH_N; i++) bits[i] = (uint8_t)(kat_cw[v][i] - '0');
-        if (!m17_bch_check(bits)) {
+        if (!bch511385_check(bits)) {
             printf("FAIL: known-answer vector %d is not a valid codeword\n", v);
             return false;
         }
@@ -72,7 +72,7 @@ static bool case_known_correction(void) {
     uint8_t bits[BCH_N];
     for (int i = 0; i < BCH_N; i++) bits[i] = (uint8_t)(kat_cw[0][i] - '0');
     for (int i = 0; i < 6; i++) bits[kat_err_pos[i]] ^= 1;
-    int r = m17_bch_decode(bits);
+    int r = bch511385_decode(bits);
     if (r != 6) {
         printf("FAIL: known 6-error case returned %d, expected 6\n", r);
         return false;
@@ -88,10 +88,10 @@ static bool case_known_correction(void) {
 static bool case_clean_is_untouched(void) {
     uint8_t bits[BCH_N], copy[BCH_N];
     for (int i = 0; i < BCH_K; i++) bits[i] = (uint8_t)(xs32() & 1);
-    m17_bch_encode(bits);
+    bch511385_encode(bits);
     for (int i = 0; i < BCH_N; i++) copy[i] = bits[i];
 
-    if (m17_bch_decode(bits) != 0) {
+    if (bch511385_decode(bits) != 0) {
         printf("FAIL: clean codeword did not return 0\n");
         return false;
     }
@@ -106,15 +106,15 @@ static bool case_clean_is_untouched(void) {
 static bool case_check_rejects_errors(void) {
     uint8_t bits[BCH_N];
     for (int i = 0; i < BCH_K; i++) bits[i] = (uint8_t)(xs32() & 1);
-    m17_bch_encode(bits);
-    if (!m17_bch_check(bits)) {
+    bch511385_encode(bits);
+    if (!bch511385_check(bits)) {
         printf("FAIL: freshly encoded word rejected\n");
         return false;
     }
     for (int e = 1; e <= 5; e++) {
         int p = (int)(xs32() % BCH_N);
         bits[p] ^= 1;
-        if (m17_bch_check(bits)) {
+        if (bch511385_check(bits)) {
             printf("FAIL: check accepted a word with %d error(s)\n", e);
             return false;
         }
@@ -134,8 +134,8 @@ static bool case_encoders_agree(void) {
             a[i] = 0;
             b[i] = 0;
         }
-        m17_bch_encode(a);
-        m17_bch_encode_fast(b);
+        bch511385_encode(a);
+        bch511385_encode_fast(b);
         for (int i = 0; i < BCH_N; i++)
             if (a[i] != b[i]) {
                 printf("FAIL: encode and encode_fast disagree at bit %d\n", i);
@@ -149,11 +149,11 @@ static bool case_round_trip(int n_errors, int trials) {
     for (int t = 0; t < trials; t++) {
         uint8_t bits[BCH_N], original[BCH_N];
         for (int i = 0; i < BCH_K; i++) bits[i] = (uint8_t)(xs32() & 1);
-        m17_bch_encode(bits);
+        bch511385_encode(bits);
         for (int i = 0; i < BCH_N; i++) original[i] = bits[i];
 
         add_errors(bits, n_errors);
-        int r = m17_bch_decode(bits);
+        int r = bch511385_decode(bits);
 
         if (r < 0 || r > n_errors) {
             printf("FAIL: %d errors: decode returned %d\n", n_errors, r);
@@ -172,14 +172,14 @@ static bool case_beyond_t_is_flagged(int n_errors, int trials) {
     for (int t = 0; t < trials; t++) {
         uint8_t bits[BCH_N], received[BCH_N];
         for (int i = 0; i < BCH_K; i++) bits[i] = (uint8_t)(xs32() & 1);
-        m17_bch_encode(bits);
+        bch511385_encode(bits);
 
         add_errors(bits, n_errors);
         // Snapshot the corrupted word: when the decoder gives up, the contract is
         // that it leaves the received bits alone, not that it restores them.
         for (int i = 0; i < BCH_N; i++) received[i] = bits[i];
 
-        int r = m17_bch_decode(bits);
+        int r = bch511385_decode(bits);
 
         if (r > BCH_T) {
             printf("FAIL: %d errors reported as %d corrected (> t)\n", n_errors, r);
@@ -201,7 +201,7 @@ static bool case_beyond_t_is_flagged(int n_errors, int trials) {
 }
 
 int main(void) {
-    m17_bch_init();
+    bch511385_init();
 
     bool kat_ok = case_known_answers();
     bool kat_fix = case_known_correction();

@@ -9,15 +9,15 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release CACHE STRING "" FORCE)
 endif()
 
-add_library(bch STATIC src/m17_bch.cpp)
+add_library(bch STATIC src/bch511385.cpp)
 target_include_directories(bch PUBLIC src)
 
 # Let CMake pick the optimisation level (Release is -O3 by default); just make
 # sure the codec compiles cleanly with warnings on.
 target_compile_options(bch PRIVATE -Wall -Wextra)
 
-add_executable(m17_bch src/demo.cpp)
-target_link_libraries(m17_bch PRIVATE bch)
+add_executable(bch511385 src/demo.cpp)
+target_link_libraries(bch511385 PRIVATE bch)
 
 enable_testing()
 

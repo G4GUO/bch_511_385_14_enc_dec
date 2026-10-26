@@ -15,7 +15,7 @@
  *   codeword is the message followed by its parity, both MSB first.
  *   This is a systematic code: the first BCH_K bits are unchanged by encoding.
  *
- * Return value of m17_bch_decode()
+ * Return value of bch511385_decode()
  *    0   codeword was already valid, buffer untouched
  *   >0   number of bit errors corrected, buffer now holds a valid codeword
  *   -1   uncorrectable: the decoder gave up and the buffer is UNCHANGED.
@@ -23,12 +23,12 @@
  *
  * Threading / reentrancy
  *   All functions are reentrant and safe to call from multiple threads or an
- *   ISR once m17_bch_init() has completed. Decoding uses roughly 1 kB of stack.
+ *   ISR once bch511385_init() has completed. Decoding uses roughly 1 kB of stack.
  *
  * Written by C.H. Brain G4GUO, 12 June 2022. Public domain, no copyright.
  */
-#ifndef M17_BCH_H
-#define M17_BCH_H
+#ifndef BCH511385_H
+#define BCH511385_H
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -47,22 +47,22 @@ extern "C" {
  * Takes about 1.2 ms on a modern x86-64 and allocates roughly 520 kB of
  * static RAM (almost all of it the 512 kB multiply table; see the note in
  * the README if that is too much for your target). */
-void m17_bch_init(void);
+void bch511385_init(void);
 
 /* Bitwise encoder. Slow path, no tables, useful as a reference. */
-void m17_bch_encode(uint8_t *inout);
+void bch511385_encode(uint8_t *inout);
 
-/* Table-driven encoder, about 40% faster than m17_bch_encode(). */
-void m17_bch_encode_fast(uint8_t *inout);
+/* Table-driven encoder, about 40% faster than bch511385_encode(). */
+void bch511385_encode_fast(uint8_t *inout);
 
 /* Return true if the BCH_N bits form a valid codeword. Does not modify them. */
-bool m17_bch_check(const uint8_t *in);
+bool bch511385_check(const uint8_t *in);
 
 /* Correct up to BCH_T bit errors in place. See return values above. */
-int m17_bch_decode(uint8_t *inout);
+int bch511385_decode(uint8_t *inout);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* M17_BCH_H */
+#endif /* BCH511385_H */

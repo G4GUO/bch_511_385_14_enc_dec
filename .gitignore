@@ -1,6 +1,6 @@
 # build outputs
 build/
-Release/m17_bch
+Release/bch511385
 Release/src/*.o
 Release/src/*.d
 
