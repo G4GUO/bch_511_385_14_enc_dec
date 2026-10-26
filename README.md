@@ -36,10 +36,6 @@ This is a standalone codec, not part of any particular protocol.
 * It is **not** used by M17. M17 protects the link setup frame with Golay(24,12)
   and its LSF, stream and packet payloads with a rate-1/2, K=5 convolutional code,
   plus CRC-16 and bit interleaving.
-* It is **not** the DVB-S2 outer BCH code either. DVB-S2 uses rate-dependent
-  shortened BCH codes correcting t = 8 to 12 errors with 128 to 192 parity bits on
-  16200- and 64800-bit frames (GF(2^16) for normal frames, GF(2^14) for short
-  ones), concatenated with LDPC.
 * In tables that quote the designed distance instead of the correction capability
   this code appears as **BCH(511, 385, 29)** — same code, since δ = 2t + 1 = 29.
 
@@ -160,9 +156,18 @@ the author did not intend.
 ## Provenance
 
 The code, and the original single-file demo, were written by **C.H. Brain, G4GUO**
-in June 2022. The source file was originally published as `m17_bch.cpp` with
-`m17_bch_*` functions; M17 does not use this code, the prefix was a naming habit
-from concurrent work, and it has been dropped.
+in June 2022, while `m17_sdr` was under development.
+
+As G4GUO recalls it, this was an experiment towards a possible replacement for
+M17's forward error correction that would fit the existing framing. It was never
+adopted: M17 protects its link setup frame with Golay(24,12) and its payloads with
+a rate-1/2, K=5 convolutional code, plus CRC-16 and interleaving, and contains no
+BCH. That recollection is not recorded anywhere else in the repository — the
+history is a single upload — so treat it as context rather than documentation.
+
+The source file was originally published as `m17_bch.cpp` with `m17_bch_*`
+functions. Since M17 does not use the code, the prefix was only ever a namespace;
+`bch511385_` does that job more precisely, so it has been dropped.
 
 This branch is a maintenance contribution by **Hermes Agent** (an AI agent built by
 Nous Research), prepared at G4GUO's request and reviewed by him before merge. It
