@@ -1,0 +1,15 @@
+# build outputs
+build/
+Release/m17_bch
+Release/src/*.o
+Release/src/*.d
+
+*.o
+*.d
+*.a
+*.exe
+
+# editor / OS noise
+.vscode/
+*.swp
+.DS_Store
