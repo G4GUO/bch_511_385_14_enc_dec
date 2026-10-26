@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: 0BSD
 /*
  * Command line demo / benchmark for the BCH (511, 385, 14) code.
  *

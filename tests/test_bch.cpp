@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: 0BSD
 #include "bch511385.h"
 
 #include <stdint.h>

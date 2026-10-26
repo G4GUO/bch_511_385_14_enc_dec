@@ -148,8 +148,14 @@ both.
 
 ## Licence
 
-Public domain, as stated in the original source header — see `LICENSE`
-(Unlicense).
+**0BSD** (zero-clause BSD) — see `LICENSE`. Use it for anything, including
+commercial and closed-source work; no attribution is required. Every source file
+carries an `SPDX-License-Identifier: 0BSD` line.
+
+The original header said the program bears no copyright and that there is no
+restriction on what it can be used for. 0BSD is that intention in a form that also
+holds where a public-domain dedication is not recognised, and it imposes nothing
+the author did not intend.
 
 ## Provenance
 

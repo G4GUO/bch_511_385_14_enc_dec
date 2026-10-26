@@ -1,8 +1,9 @@
+// SPDX-License-Identifier: 0BSD
 /*
  * BCH (511, 385, 14) encoder and decoder - implementation.
  *
  * Written by C.H. Brain G4GUO, 12 June 2022.
- * Public domain: no copyright, no restriction on application.
+ * Licence: 0BSD (zero-clause BSD). No attribution required; see LICENSE.
  * The author accepts no responsibility for correctness or fitness for purpose.
  *
  * This file deliberately contains no main() and no stdio, so it can be linked

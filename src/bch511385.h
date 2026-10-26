@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: 0BSD */
 /*
  * BCH (511, 385, 14) encoder and decoder - public interface.
  *
@@ -25,7 +26,8 @@
  *   All functions are reentrant and safe to call from multiple threads or an
  *   ISR once bch511385_init() has completed. Decoding uses roughly 1 kB of stack.
  *
- * Written by C.H. Brain G4GUO, 12 June 2022. Public domain, no copyright.
+ * Written by C.H. Brain G4GUO, 12 June 2022.
+ * Licence: 0BSD (zero-clause BSD). No attribution required; see LICENSE.
  */
 #ifndef BCH511385_H
 #define BCH511385_H
